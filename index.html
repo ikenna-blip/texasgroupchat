@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Texas Group Chat</title>
+<meta name="description" content="Texas Group Chat: a daily Texas county map game, Texas news, and a shortlist of lobbyists with Democratic relationships at the Capitol.">
+<meta property="og:title" content="Texas Group Chat">
+<meta property="og:description" content="Can you find today's Texas county? Four guesses. Play the Daily County.">
+<meta property="og:url" content="https://www.texasgroupchat.com">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%230F1B2D'/%3E%3Cpath d='M5 6h9a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 14 14H9l-3.5 3v-3H5a1.5 1.5 0 0 1-1.5-1.5v-5A1.5 1.5 0 0 1 5 6z' fill='none' stroke='white' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0F1B2D;--muted:#4A5872;--body:#24324A;--blue:#1F4FA3;--blue-d:#143A7E;--chip:#E8EEF8;--bg:#F3F5F9;--green:#1E7A46;--red:#991B1B}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Archivo',system-ui,sans-serif}
+a{color:var(--blue)}a:hover{color:var(--blue-d)}
+.wrap{max-width:1120px;margin:0 auto;padding-left:clamp(16px,4vw,40px);padding-right:clamp(16px,4vw,40px)}
+header{background:var(--ink);color:#fff}
+.top{padding-top:18px;padding-bottom:18px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-name{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.brand-date{font-size:13px;color:#B9C4D6;margin-top:4px}
+.pill-link{font-size:14px;font-weight:600;color:#fff;text-decoration:none;border:1px solid #5A6C8A;padding:10px 16px;border-radius:999px}
+.pill-link:hover{color:#fff;border-color:#fff}
+nav{display:flex;flex-wrap:wrap;gap:4px}
+.tab{background:none;border:0;font:inherit;cursor:pointer;padding:14px 16px 12px;font-size:15px;font-weight:700;color:#B9C4D6;border-bottom:3px solid transparent}
+.tab:hover{color:#fff}
+.tab[aria-selected=true]{color:#fff;border-bottom-color:#fff}
+main{padding-top:32px;padding-bottom:64px}
+.eyebrow{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)}
+h1{margin:8px 0 4px;font-size:clamp(28px,4vw,40px);font-weight:800;letter-spacing:-.02em}
+.card{background:#fff;border-radius:16px;padding:24px;box-shadow:0 1px 2px rgba(15,27,45,.08)}
+.game{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.game-map{flex:999 1 520px;min-width:0;padding:clamp(16px,3vw,28px)}
+.game-side{flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:16px}
+.lead{margin:0 0 20px;font-size:16px;color:var(--muted)}
+#map{width:100%;height:auto;display:block}
+.cty{stroke:#fff;stroke-width:.7;stroke-linejoin:round;fill:#DCE3EE}
+.cty.live{cursor:pointer}
+.cty.live:hover,.cty.live:focus{fill:#7FA0D6;outline:none}
+.legend{display:flex;flex-wrap:wrap;gap:18px;margin-top:14px;font-size:13px;color:var(--muted)}
+.legend span.sw{width:14px;height:14px;border-radius:3px;display:inline-block;vertical-align:-2px;margin-right:8px}
+.big{font-size:30px;font-weight:800;letter-spacing:-.02em}
+.label{display:block;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.guesses{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.guesses li{display:flex;align-items:center;gap:12px;font-size:15px}
+.guesses .sw{width:22px;height:22px;border-radius:5px;flex:none}
+.guesses .nm{flex:1 1 auto;min-width:0}
+.guesses .hl{font-weight:700}
+textarea{width:100%;resize:none;font:inherit;font-size:14px;line-height:1.45;padding:12px;border:1px solid #CBD3E1;border-radius:10px;background:#F7F9FC;color:var(--ink)}
+.btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.btn{font:inherit;cursor:pointer;flex:1 1 140px;min-height:46px;border-radius:10px;font-size:15px;font-weight:700}
+.btn.primary{border:0;background:var(--blue);color:#fff}
+.btn.secondary{border:1px solid var(--blue);background:#fff;color:var(--blue)}
+.dark{background:var(--ink);color:#fff;border-radius:16px;padding:24px}
+.dark .eyebrow{color:#9FB6E0}
+.white-btn{font:inherit;cursor:pointer;min-height:44px;padding:0 18px;border:0;border-radius:999px;background:#fff;color:var(--ink);font-size:15px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.lob{display:flex;flex-direction:column;gap:10px}
+.lob.feature{border:2px solid var(--blue)}
+.lob h2{margin:0;font-size:22px;font-weight:800}
+.lob .who{font-size:15px;font-weight:600;color:var(--body)}
+.lob p{margin:0;font-size:15px;line-height:1.55;color:var(--muted)}
+.city{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips span{font-size:13px;padding:4px 10px;border-radius:999px;background:var(--chip);color:var(--blue-d)}
+.links{margin-top:auto;padding-top:8px;display:flex;flex-wrap:wrap;gap:16px;font-size:15px;font-weight:600}
+.dl{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--blue);text-decoration:none}
+.cta{margin-top:28px;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;padding:28px}
+footer{border-top:1px solid #DCE3EE}
+footer .wrap{padding-top:24px;padding-bottom:24px;font-size:13px;color:var(--muted)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap top">
+    <div class="brand">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-4 3.5V14H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"></path><path d="M19 8h1a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-1v3.5L15 18h-4a2 2 0 0 1-2-2v-.5"></path><path d="M6.5 9h.01M9.5 9h.01M12.5 9h.01" stroke-width="2.4" stroke-linecap="round"></path></svg>
+      <div>
+        <div class="brand-name">Texas Group Chat</div>
+        <div class="brand-date" id="today"></div>
+      </div>
+    </div>
+    <a class="pill-link" href="#lobbyists" data-go="lobby">Hiring a lobbyist? See the shortlist</a>
+  </div>
+  <nav class="wrap" role="tablist" aria-label="Sections">
+    <button class="tab" role="tab" data-tab="games" aria-selected="true">Today's County</button>
+    <button class="tab" role="tab" data-tab="news" aria-selected="false">News</button>
+    <button class="tab" role="tab" data-tab="lobby" aria-selected="false">Find a Lobbyist</button>
+  </nav>
+</header>
+
+<main class="wrap">
+
+<section id="panel-games" role="tabpanel">
+  <div class="game">
+    <div class="card game-map">
+      <div class="eyebrow">Daily County · #<span id="puzzleNo"></span></div>
+      <h1>Where is <span id="targetName">…</span> County?</h1>
+      <p class="lead" id="instruction">Loading the map…</p>
+      <svg id="map" viewBox="0 0 760 720" role="group" aria-label="Map of Texas counties"></svg>
+      <div class="legend">
+        <div><span class="sw" style="background:#1E7A46"></span>Today's county</div>
+        <div><span class="sw" style="width:72px;background:linear-gradient(90deg,#7F1D1D,#FED7D7)"></span>Misses: dark red is close, light red is far</div>
+      </div>
+    </div>
+    <aside class="game-side">
+      <div class="card" id="howto">
+        <h2 style="margin:0 0 8px;font-size:20px;font-weight:800">How to play</h2>
+        <p style="margin:0;font-size:15px;line-height:1.55;color:var(--muted)">Texas has 254 counties. Each day we pick one, and everyone gets the same county. Tap the outline where you think it is. You get 4 guesses. Each miss turns red, and the darker the red, the closer you are.</p>
+      </div>
+      <div class="card" id="guessCard" hidden>
+        <div id="liveFeedback">
+          <div class="big" id="lastLabel"></div>
+          <p style="margin:6px 0 16px;font-size:15px;color:var(--body)" id="triesLeft"></p>
+        </div>
+        <span class="label">Your guesses</span>
+        <ol class="guesses" id="guessList"></ol>
+      </div>
+      <div class="card" id="resultCard" hidden>
+        <div class="big" id="resultTitle"></div>
+        <p style="margin:8px 0 20px;font-size:16px;line-height:1.5;color:var(--body)" id="resultBody"></p>
+        <label class="label" for="sharebox" style="margin-bottom:8px">Share your result</label>
+        <textarea id="sharebox" rows="6" readonly></textarea>
+        <div class="btns">
+          <button class="btn primary" id="copyBtn">Copy share link</button>
+          <button class="btn secondary" id="shareBtn" hidden>Share…</button>
+        </div>
+        <p style="margin:14px 0 0;font-size:13px;color:var(--muted)">A new county drops at midnight Central.</p>
+      </div>
+      <div class="dark">
+        <div class="eyebrow">For companies</div>
+        <p style="margin:8px 0 16px;font-size:18px;font-weight:700;line-height:1.35">Need someone at the Capitol who knows the Democratic side of the aisle?</p>
+        <button class="white-btn" data-go="lobby">See our lobbyist shortlist</button>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<section id="panel-news" role="tabpanel" hidden>
+  <div class="eyebrow">News</div>
+  <div class="card" style="margin-top:16px;padding:clamp(32px,6vw,72px) clamp(20px,4vw,48px);text-align:center">
+    <h1 style="margin:0 0 10px;font-size:clamp(32px,5vw,48px)">Coming soon</h1>
+    <p style="margin:0;font-size:17px;color:var(--muted)">Texas news is on the way. In the meantime, play today's county.</p>
+  </div>
+</section>
+
+<section id="panel-lobby" role="tabpanel" hidden>
+  <div id="lobbyists" class="eyebrow">For companies</div>
+  <h1 style="margin-bottom:8px;max-width:760px">Lobbyists with Democratic relationships at the Texas Capitol</h1>
+  <p style="margin:0 0 28px;font-size:17px;line-height:1.55;color:var(--muted);max-width:720px">After a surge of Democrats were elected, many companies have sought to hire lobbyists with strong relationships with Democratic offices. Choose from this shortlist of Texas lobbyists.</p>
+  <div class="grid">
+
+    <article class="card lob">
+      <div class="city">Austin</div>
+      <h2>Philips Uresti Meachum Partners</h2>
+      <div class="who">Jerry Philips, Jaclyn Uresti, Kurt Meachum</div>
+      <p>Full-service public affairs and government relations firm, founded in 2009. Works for corporate, governmental, nonprofit and trade clients.</p>
+      <div class="chips"><span>Public affairs</span><span>Trade associations</span></div>
+      <div class="links"><a href="https://pumpartners.com" target="_blank" rel="noopener">pumpartners.com</a></div>
+    </article>
+
+    <article class="card lob">
+      <div class="city">Austin</div>
+      <h2>Graydon Strama Lucio Group</h2>
+      <p>Austin government relations and advocacy firm that pairs public policy expertise with political know-how, with bipartisan representation.</p>
+      <div class="chips"><span>Government relations</span><span>Public policy</span></div>
+      <div class="links"><a href="https://gsladvocacy.com/" target="_blank" rel="noopener">gsladvocacy.com</a></div>
+    </article>
+
+    <article class="card lob">
+      <div class="city">Austin</div>
+      <h2>Campos Consulting Group</h2>
+      <div class="who">Lorena Campos</div>
+      <p>Founded the firm in 2018 after roles at the Texas Trial Lawyers Association and Texas Strategy Group. Rio Grande Valley native and Spanish speaker; serves on the board of the Mexican American Legislative Leadership Foundation.</p>
+      <div class="chips"><span>Energy</span><span>Municipalities</span><span>Education</span></div>
+      <div class="links"><a class="dl" href="/Lorena-Campos-Bio.pdf" download><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"></path><path d="M7 10l5 5 5-5"></path><path d="M5 20h14"></path></svg>Download bio (PDF)</a></div>
+    </article>
+
+    <article class="card lob feature">
+      <div class="city">Austin</div>
+      <h2>Okoro Law PLLC</h2>
+      <div class="who">Ikenna Okoro</div>
+      <p>Former Assistant Parliamentarian of the Texas House of Representatives. Government relations backed by a litigation practice.</p>
+      <div class="chips"><span>House procedure</span><span>AI &amp; tech</span><span>Energy</span></div>
+      <div class="links"><a href="https://www.okorolaw.com" target="_blank" rel="noopener">okorolaw.com</a></div>
+    </article>
+
+    <article class="card lob">
+      <div class="city">Austin</div>
+      <h2>Kate Goodrich Wright</h2>
+      <div class="who">Partner, K&amp;L Gates</div>
+      <p>Former deputy general counsel and policy advisor to the Speaker of the Texas House. Earlier roles with the Senate Health and Human Services and Finance committees. Advises before the Legislature, state agencies and Congress.</p>
+      <div class="chips"><span>Energy</span><span>Health &amp; human services</span></div>
+      <div class="links"><a href="https://www.klgates.com/Kate-G-Goodrich" target="_blank" rel="noopener">klgates.com profile</a></div>
+    </article>
+
+    <article class="card lob">
+      <h2>[Lobbyist or firm name]</h2>
+      <div class="who">[Principal name]</div>
+      <p>[Two lines on background, issue areas and Democratic relationships.]</p>
+      <div class="chips"><span>[Focus area]</span></div>
+      <div class="links"><a href="#">[website]</a></div>
+    </article>
+
+  </div>
+  <div class="dark cta">
+    <div style="flex:1 1 380px">
+      <div style="font-size:20px;font-weight:800">Not sure who fits your issue?</div>
+      <p style="margin:6px 0 0;font-size:15px;line-height:1.5;color:#C9D3E3">Send a few lines about your company and the bill or agency you're watching. We'll point you to the right person on this list.</p>
+    </div>
+    <a class="white-btn" href="https://www.okorolaw.com" target="_blank" rel="noopener">Ask for a match</a>
+  </div>
+</section>
+
+</main>
+<footer><div class="wrap">TexasGroupChat.com · Lobbyist listings are informational and not an endorsement.</div></footer>
+
+<script>
+(function () {
+  var SHARE_URL = 'https://www.TexasGroupChat.com';
+  var MAX_TRIES = 4;
+  var STORE_PREFIX = 'tgc-county-';
+  var LAUNCH_DAY = Math.floor(Date.UTC(2026, 10, 4) / 864e5);
+  var SVGNS = 'http://www.w3.org/2000/svg';
+
+  // ---- tabs ----
+  function showTab(id) {
+    document.querySelectorAll('.tab').forEach(function (b) { b.setAttribute('aria-selected', b.dataset.tab === id ? 'true' : 'false'); });
+    ['games', 'news', 'lobby'].forEach(function (t) { document.getElementById('panel-' + t).hidden = t !== id; });
+  }
+  document.querySelectorAll('.tab').forEach(function (b) { b.addEventListener('click', function () { showTab(b.dataset.tab); }); });
+  document.querySelectorAll('[data-go]').forEach(function (el) {
+    el.addEventListener('click', function (e) { e.preventDefault(); showTab(el.dataset.go); window.scrollTo(0, 0); });
+  });
+  if (location.hash === '#lobbyists') showTab('lobby');
+  if (location.hash === '#news') showTab('news');
+
+  // ---- date (Central time) ----
+  var s;
+  try { s = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Chicago' }); }
+  catch (e) { s = new Date().toISOString().slice(0, 10); }
+  var p = s.split('-').map(Number);
+  var utc = Date.UTC(p[0], p[1] - 1, p[2]);
+  var dayNum = Math.floor(utc / 864e5);
+  var puzzleNo = dayNum - LAUNCH_DAY + 1;
+  document.getElementById('today').textContent = new Date(utc).toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  document.getElementById('puzzleNo').textContent = puzzleNo;
+
+  var storeKey = STORE_PREFIX + s;
+  var guesses = [];
+  try { var saved = JSON.parse(localStorage.getItem(storeKey) || '[]'); if (Array.isArray(saved)) guesses = saved; } catch (e) {}
+
+  var list = [], byId = {}, target = null, pathById = {};
+
+  function center(d) {
+    var nums = d.match(/-?\d+(?:\.\d+)?/g) || [];
+    var minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9;
+    for (var i = 0; i + 1 < nums.length; i += 2) {
+      var x = +nums[i], y = +nums[i + 1];
+      if (x < minX) minX = x; if (x > maxX) maxX = x;
+      if (y < minY) minY = y; if (y > maxY) maxY = y;
+    }
+    return [(minX + maxX) / 2, (minY + maxY) / 2];
+  }
+
+  function heat(dist) {
+    var t = Math.max(0, Math.min(dist / 450, 1));
+    var near = [127, 29, 29], far = [254, 215, 215];
+    var rgb = near.map(function (v, i) { return Math.round(v + (far[i] - v) * t); });
+    var label = dist < 70 ? 'Very hot' : dist < 150 ? 'Hot' : dist < 260 ? 'Warm' : dist < 400 ? 'Cold' : 'Freezing';
+    return { color: 'rgb(' + rgb.join(',') + ')', label: label, text: t < 0.55 ? '#991B1B' : '#1F4FA3' };
+  }
+
+  function pick(id) {
+    if (!target || isOver() || guesses.indexOf(id) >= 0) return;
+    guesses.push(id);
+    try { localStorage.setItem(storeKey, JSON.stringify(guesses)); } catch (e) {}
+    render();
+  }
+  function found() { return !!target && guesses.indexOf(target.id) >= 0; }
+  function isOver() { return found() || guesses.length >= MAX_TRIES; }
+
+  function render() {
+    if (!target) return;
+    var over = isOver(), correct = found(), used = guesses.length, left = MAX_TRIES - used;
+    var rows = guesses.map(function (id, i) {
+      var c = byId[id]; if (!c) return null;
+      if (id === target.id) return { num: i + 1, name: c.n, label: 'Found it!', swatch: '#1E7A46', text: '#1E7A46', id: id };
+      var h = heat(Math.hypot(c.cx - target.cx, c.cy - target.cy));
+      return { num: i + 1, name: c.n, label: h.label, swatch: h.color, text: h.text, id: id };
+    }).filter(Boolean);
+
+    list.forEach(function (c) {
+      var el = pathById[c.id];
+      var fill = '';
+      if (over && c.id === target.id) fill = '#1E7A46';
+      rows.forEach(function (r) { if (r.id === c.id && c.id !== target.id) fill = r.swatch; });
+      el.style.fill = fill;
+      var live = !over && guesses.indexOf(c.id) < 0;
+      el.setAttribute('class', live ? 'cty live' : 'cty');
+      el.setAttribute('tabindex', live ? '0' : '-1');
+      el.setAttribute('aria-label', live ? 'County' : c.n + ' County');
+    });
+
+    document.getElementById('instruction').textContent = over ? 'Come back tomorrow for a new county.' : 'Tap the county on the map. You have ' + left + (left === 1 ? ' guess' : ' guesses') + ' left.';
+    document.getElementById('howto').hidden = over;
+    document.getElementById('guessCard').hidden = rows.length === 0;
+    document.getElementById('liveFeedback').hidden = over;
+    var last = rows[rows.length - 1];
+    if (last) {
+      var ll = document.getElementById('lastLabel');
+      ll.textContent = last.label; ll.style.color = last.text;
+      document.getElementById('triesLeft').textContent = left === 1 ? 'Last guess. Make it count.' : left + ' guesses left. Darker red means you are closer.';
+    }
+    var gl = document.getElementById('guessList');
+    gl.innerHTML = '';
+    rows.forEach(function (r) {
+      var li = document.createElement('li');
+      var sw = document.createElement('span'); sw.className = 'sw'; sw.style.background = r.swatch; sw.setAttribute('aria-hidden', 'true');
+      var nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = r.num + '. ' + r.name + ' County';
+      var hl = document.createElement('span'); hl.className = 'hl'; hl.style.color = r.text; hl.textContent = r.label;
+      li.append(sw, nm, hl); gl.appendChild(li);
+    });
+
+    var rc = document.getElementById('resultCard');
+    rc.hidden = !over;
+    if (over) {
+      var rt = document.getElementById('resultTitle');
+      rt.textContent = correct ? 'Correct!' : 'Out of guesses';
+      rt.style.color = correct ? '#1E7A46' : '#991B1B';
+      rc.style.borderTop = '6px solid ' + (correct ? '#1E7A46' : '#991B1B');
+      document.getElementById('resultBody').textContent = correct
+        ? 'You found ' + target.n + ' County in ' + used + (used === 1 ? ' try' : ' tries') + '. It is highlighted in green.'
+        : target.n + ' County is highlighted in green. Your misses are shaded red by how close they were.';
+      document.getElementById('sharebox').value = 'Texas Group Chat · Daily County #' + puzzleNo + '\n' +
+        (correct ? 'I found ' + target.n + ' County in ' + used + '/' + MAX_TRIES + ' tries.' : 'I missed ' + target.n + ' County (X/' + MAX_TRIES + ').') +
+        '\n' + rows.map(function (r) { return r.label; }).join(' → ') +
+        '\nCan you find it? ' + SHARE_URL;
+    }
+  }
+
+  document.getElementById('copyBtn').addEventListener('click', function () {
+    var box = document.getElementById('sharebox'), btn = this;
+    function ok() { btn.textContent = 'Copied'; }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(box.value).then(ok, function () { box.select(); try { document.execCommand('copy'); ok(); } catch (e) {} });
+    } else { box.select(); try { document.execCommand('copy'); ok(); } catch (e) {} }
+  });
+  var shareBtn = document.getElementById('shareBtn');
+  if (navigator.share) {
+    shareBtn.hidden = false;
+    shareBtn.addEventListener('click', function () {
+      navigator.share({ title: 'Texas Group Chat Daily County', text: document.getElementById('sharebox').value }).catch(function () {});
+    });
+  }
+
+  fetch('/counties.json').then(function (r) { return r.json(); }).then(function (data) {
+    var svg = document.getElementById('map');
+    list = data.map(function (c) { var ctr = center(c.d); return { id: c.id, n: c.n, d: c.d, cx: ctr[0], cy: ctr[1] }; });
+    list.forEach(function (c) {
+      byId[c.id] = c;
+      var el = document.createElementNS(SVGNS, 'path');
+      el.setAttribute('d', c.d);
+      el.addEventListener('click', function () { pick(c.id); });
+      el.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(c.id); } });
+      svg.appendChild(el);
+      pathById[c.id] = el;
+    });
+    target = list[((dayNum * 97 + 31) % list.length + list.length) % list.length];
+    document.getElementById('targetName').textContent = target.n;
+    render();
+  }).catch(function () {
+    document.getElementById('instruction').textContent = 'The map could not load. Please refresh the page.';
+  });
+})();
+</script>
+</body>
+</html>
