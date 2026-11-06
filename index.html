@@ -72,6 +72,26 @@ textarea{width:100%;resize:none;font:inherit;font-size:14px;line-height:1.45;pad
 footer{border-top:1px solid #DCE3EE}
 footer .wrap{padding-top:24px;padding-bottom:24px;font-size:13px;color:var(--muted)}
 [hidden]{display:none!important}
+.feed-wrap{max-width:680px}
+.feed-list{display:flex;flex-direction:column;gap:16px;margin-bottom:16px}
+.post{padding:20px}
+.post.featured{border:2px solid var(--blue);padding:24px}
+.post-meta{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);margin-bottom:10px}
+.badge{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:var(--blue);padding:3px 9px;border-radius:999px}
+.post-text{margin:0;font-size:17px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.post.featured .post-text{font-size:21px;font-weight:700;line-height:1.4}
+.post-img{display:block;width:100%;max-height:560px;object-fit:contain;background:#EEF1F6;border-radius:12px;margin-top:12px}
+.post-text + .post-img,.post-text + .linkcard,.post-text + .tweet{margin-top:12px}
+.linkcard{display:flex;flex-direction:column;border:1px solid #DCE3EE;border-radius:12px;overflow:hidden;text-decoration:none;color:var(--ink);margin-top:12px}
+.linkcard:hover{border-color:var(--blue);color:var(--ink)}
+.linkcard img{width:100%;max-height:300px;object-fit:cover;display:block;background:#EEF1F6}
+.linkcard .lc-body{padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.linkcard .lc-site{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--blue)}
+.linkcard .lc-title{font-size:18px;font-weight:800;line-height:1.3}
+.linkcard .lc-desc{font-size:14px;line-height:1.5;color:var(--muted)}
+.tweet{margin-top:12px}
+.tweet .twitter-tweet{margin:0!important}
+.tweet-fallback{display:inline-block;font-weight:600}
 </style>
 </head>
 <body>
@@ -141,10 +161,16 @@ footer .wrap{padding-top:24px;padding-bottom:24px;font-size:13px;color:var(--mut
 </section>
 
 <section id="panel-news" role="tabpanel" hidden>
-  <div class="eyebrow">News</div>
-  <div class="card" style="margin-top:16px;padding:clamp(32px,6vw,72px) clamp(20px,4vw,48px);text-align:center">
-    <h1 style="margin:0 0 10px;font-size:clamp(32px,5vw,48px)">Coming soon</h1>
-    <p style="margin:0;font-size:17px;color:var(--muted)">Texas news is on the way. In the meantime, play today's county.</p>
+  <div class="feed-wrap">
+    <div class="eyebrow">News</div>
+    <h1 style="margin-bottom:24px">What the group chat is talking about</h1>
+    <div id="featured" class="feed-list"></div>
+    <div id="feed" class="feed-list"></div>
+    <div class="card" id="feedEmpty" hidden style="text-align:center;padding:48px 24px">
+      <div style="font-size:22px;font-weight:800">Quiet in the chat right now</div>
+      <p style="margin:8px 0 0;color:var(--muted)">Check back soon. In the meantime, play today's county.</p>
+    </div>
+    <p id="feedStatus" style="color:var(--muted);font-size:15px">Loading the feed…</p>
   </div>
 </section>
 
@@ -231,6 +257,87 @@ footer .wrap{padding-top:24px;padding-bottom:24px;font-size:13px;color:var(--mut
   function showTab(id) {
     document.querySelectorAll('.tab').forEach(function (b) { b.setAttribute('aria-selected', b.dataset.tab === id ? 'true' : 'false'); });
     ['games', 'news', 'lobby'].forEach(function (t) { document.getElementById('panel-' + t).hidden = t !== id; });
+    if (id === 'news') loadFeed();
+  }
+
+  // ---- group chat feed ----
+  var feedLoadedAt = 0, widgetsRequested = false;
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function safeUrl(u) { return /^https?:\/\//i.test(u || '') ? u : null; }
+  function timeAgo(iso) {
+    var t = new Date(iso).getTime(), s = (Date.now() - t) / 1000;
+    if (isNaN(t)) return '';
+    if (s < 60) return 'just now';
+    if (s < 3600) return Math.floor(s / 60) + 'm ago';
+    if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+    return new Date(t).toLocaleString('en-US', { timeZone: 'America/Chicago', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  }
+  function loadTweets(container) {
+    if (window.twttr && window.twttr.widgets) { window.twttr.widgets.load(container); return; }
+    if (widgetsRequested) return;
+    widgetsRequested = true;
+    var s = document.createElement('script');
+    s.src = 'https://platform.twitter.com/widgets.js';
+    s.async = true;
+    document.body.appendChild(s);
+  }
+  function renderPost(p) {
+    var card = el('article', 'card post' + (p.pinned ? ' featured' : ''));
+    var meta = el('div', 'post-meta');
+    if (p.pinned) meta.appendChild(el('span', 'badge', 'Big story'));
+    meta.appendChild(el('span', null, timeAgo(p.createdAt)));
+    card.appendChild(meta);
+    if (p.text) card.appendChild(el('p', 'post-text', p.text));
+    var img = safeUrl(p.image);
+    if (img) {
+      var i = el('img', 'post-img');
+      i.src = img; i.alt = p.text ? p.text.slice(0, 120) : 'Photo from the group chat'; i.loading = 'lazy';
+      card.appendChild(i);
+    }
+    var tw = safeUrl(p.tweet);
+    if (tw) {
+      var wrap = el('div', 'tweet');
+      var bq = el('blockquote', 'twitter-tweet');
+      bq.setAttribute('data-dnt', 'true');
+      var a = el('a', 'tweet-fallback', 'View the post on X');
+      a.href = tw; a.target = '_blank'; a.rel = 'noopener';
+      bq.appendChild(a); wrap.appendChild(bq); card.appendChild(wrap);
+    }
+    if (p.link && safeUrl(p.link.url)) {
+      var lc = el('a', 'linkcard');
+      lc.href = p.link.url; lc.target = '_blank'; lc.rel = 'noopener';
+      var limg = safeUrl(p.link.image);
+      if (limg) { var li = el('img'); li.src = limg; li.alt = ''; li.loading = 'lazy'; lc.appendChild(li); }
+      var body = el('div', 'lc-body');
+      if (p.link.site) body.appendChild(el('div', 'lc-site', p.link.site));
+      body.appendChild(el('div', 'lc-title', p.link.title || p.link.url));
+      if (p.link.description) body.appendChild(el('div', 'lc-desc', p.link.description));
+      lc.appendChild(body); card.appendChild(lc);
+    }
+    return card;
+  }
+  function loadFeed() {
+    if (Date.now() - feedLoadedAt < 30000) return;
+    feedLoadedAt = Date.now();
+    var status = document.getElementById('feedStatus');
+    fetch('/api/feed').then(function (r) { return r.json(); }).then(function (data) {
+      var posts = (data && data.posts) || [];
+      var featured = document.getElementById('featured'), feed = document.getElementById('feed');
+      featured.innerHTML = ''; feed.innerHTML = '';
+      posts.filter(function (p) { return p.pinned; }).forEach(function (p) { featured.appendChild(renderPost(p)); });
+      posts.filter(function (p) { return !p.pinned; }).forEach(function (p) { feed.appendChild(renderPost(p)); });
+      status.hidden = true;
+      document.getElementById('feedEmpty').hidden = posts.length > 0;
+      if (posts.some(function (p) { return p.tweet; })) loadTweets(document.getElementById('panel-news'));
+    }).catch(function () {
+      feedLoadedAt = 0;
+      status.textContent = 'The feed could not load. Please refresh the page.';
+    });
   }
   document.querySelectorAll('.tab').forEach(function (b) { b.addEventListener('click', function () { showTab(b.dataset.tab); }); });
   document.querySelectorAll('[data-go]').forEach(function (el) {
