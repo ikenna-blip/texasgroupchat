@@ -180,7 +180,7 @@ footer .wrap{padding-top:24px;padding-bottom:24px;font-size:13px;color:var(--mut
       <div class="links"><a class="dl" href="/Lorena-Campos-Bio.pdf" download><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"></path><path d="M7 10l5 5 5-5"></path><path d="M5 20h14"></path></svg>Download bio (PDF)</a></div>
     </article>
 
-    <article class="card lob feature">
+    <article class="card lob">
       <div class="city">Austin</div>
       <h2>Okoro Law PLLC</h2>
       <div class="who">Ikenna Okoro</div>
@@ -212,7 +212,7 @@ footer .wrap{padding-top:24px;padding-bottom:24px;font-size:13px;color:var(--mut
       <div style="font-size:20px;font-weight:800">Not sure who fits your issue?</div>
       <p style="margin:6px 0 0;font-size:15px;line-height:1.5;color:#C9D3E3">Send a few lines about your company and the bill or agency you're watching. We'll point you to the right person on this list.</p>
     </div>
-    <a class="white-btn" href="https://www.okorolaw.com" target="_blank" rel="noopener">Ask for a match</a>
+    <a class="white-btn" href="#">Ask for a match</a>
   </div>
 </section>
 
@@ -272,7 +272,8 @@ footer .wrap{padding-top:24px;padding-bottom:24px;font-size:13px;color:var(--mut
     var near = [127, 29, 29], far = [254, 215, 215];
     var rgb = near.map(function (v, i) { return Math.round(v + (far[i] - v) * t); });
     var label = dist < 70 ? 'Very hot' : dist < 150 ? 'Hot' : dist < 260 ? 'Warm' : dist < 400 ? 'Cold' : 'Freezing';
-    return { color: 'rgb(' + rgb.join(',') + ')', label: label, text: t < 0.55 ? '#991B1B' : '#1F4FA3' };
+    var emoji = dist < 70 ? '🔥' : dist < 150 ? '🌶️' : dist < 260 ? '☀️' : dist < 400 ? '❄️' : '🧊';
+    return { color: 'rgb(' + rgb.join(',') + ')', label: label, emoji: emoji, text: t < 0.55 ? '#991B1B' : '#1F4FA3' };
   }
 
   function pick(id) {
@@ -289,9 +290,9 @@ footer .wrap{padding-top:24px;padding-bottom:24px;font-size:13px;color:var(--mut
     var over = isOver(), correct = found(), used = guesses.length, left = MAX_TRIES - used;
     var rows = guesses.map(function (id, i) {
       var c = byId[id]; if (!c) return null;
-      if (id === target.id) return { num: i + 1, name: c.n, label: 'Found it!', swatch: '#1E7A46', text: '#1E7A46', id: id };
+      if (id === target.id) return { num: i + 1, name: c.n, label: 'Found it!', emoji: '🎯', swatch: '#1E7A46', text: '#1E7A46', id: id };
       var h = heat(Math.hypot(c.cx - target.cx, c.cy - target.cy));
-      return { num: i + 1, name: c.n, label: h.label, swatch: h.color, text: h.text, id: id };
+      return { num: i + 1, name: c.n, label: h.label, emoji: h.emoji, swatch: h.color, text: h.text, id: id };
     }).filter(Boolean);
 
     list.forEach(function (c) {
@@ -338,7 +339,7 @@ footer .wrap{padding-top:24px;padding-bottom:24px;font-size:13px;color:var(--mut
         : target.n + ' County is highlighted in green. Your misses are shaded red by how close they were.';
       document.getElementById('sharebox').value = 'Texas Group Chat · Daily County #' + puzzleNo + '\n' +
         (correct ? 'I found ' + target.n + ' County in ' + used + '/' + MAX_TRIES + ' tries.' : 'I missed ' + target.n + ' County (X/' + MAX_TRIES + ').') +
-        '\n' + rows.map(function (r) { return r.label; }).join(' → ') +
+        '\n' + rows.map(function (r) { return r.emoji; }).join(' ') +
         '\nCan you find it? ' + SHARE_URL;
     }
   }
